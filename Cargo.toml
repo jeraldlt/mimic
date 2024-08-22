@@ -1,0 +1,13 @@
+[package]
+name = "mimic_emulator"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+regex = "1.10"
+thiserror = "1.0"
+
+[features]
+mips32_assembler = []
+mips32_emulator = []
+mips32 = ["mips32_assembler", "mips32_emulator"]
