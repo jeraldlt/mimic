@@ -1,4 +1,4 @@
-use crate::errors::MimicError;
+use crate::errors::{MimicError, MimicErrorType};
 
 #[derive(Debug)]
 pub struct Memory {
@@ -76,7 +76,11 @@ impl Memory {
             }
         }
 
-        Err(MimicError::MemoryOutOfBounds(index))
+        Err(MimicError {
+            span: None,
+            source: None,
+            ty: MimicErrorType::MemoryOutOfBounds{address: index as usize}
+        })
     }
 
     pub fn set(&mut self, index: u32, value: u32) {

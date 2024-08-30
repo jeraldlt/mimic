@@ -1,4 +1,9 @@
-use crate::errors::MimicError;
+
+pub mod lexer;
+pub mod parser;
+pub mod assembler;
+
+use crate::errors::{MimicError, MimicErrorType};
 
 use regex::Regex;
 
@@ -6,6 +11,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
+
 
 pub fn assemble_from_string(contents: String) -> Result<(Vec<u8>, Vec<u8>), MimicError> {
     let lines = contents
@@ -88,9 +94,10 @@ where
     match File::open(&filename) {
         Ok(f) => return Ok(io::BufReader::new(f).lines()),
         Err(_) => {
-            return Err(MimicError::FileDoesNotExist(
-                filename.as_ref().to_str().unwrap().to_owned(),
-            ))
+            return Err(MimicError {
+                span: None,
+                ty: MimicErrorType::FileDoesNotExist{filename: filename.as_ref().to_owned()}
+            })
         }
     }
 }
@@ -138,7 +145,10 @@ fn register_name_to_number(reg: String) -> Result<usize, MimicError> {
         "30" | "fp" => Ok(30),
         "31" | "ra" => Ok(31),
 
-        _ => Err(MimicError::UnknownRegister(reg)),
+        _ => Err(MimicError {
+            span: None,
+            ty: MimicErrorType::UnknownRegister{register_name: reg}
+        }),
     }
 }
 
@@ -365,7 +375,10 @@ fn assemble_instructions(
             "xori" => todo!("Instuction not yet implemented: {}", mnemonic),
 
             _ => {
-                return Err(MimicError::UnknownMnemonic(mnemonic.to_owned()));
+                return Err(MimicError {
+                    span: None,
+                    ty: MimicErrorType::UnknownMnemonic{mnemonic: mnemonic.to_owned()}
+                });
             }
         }
     }
