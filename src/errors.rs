@@ -23,14 +23,14 @@ impl Span {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MimicError {
     pub span: Option<Span>,
     pub source: Option<SimpleFile<String, String>>,
     pub ty: MimicErrorType,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum MimicErrorType {
     FileDoesNotExist {
         filename: PathBuf,
@@ -110,6 +110,14 @@ impl MimicError {
                                 .with_message(format!("Token {}", token.clone())),
                         ])
                 },
+                MimicErrorType::UnknownRegister { register_name } => {
+                    Diagnostic::error()
+                        .with_message(self.msg())
+                        .with_labels(vec![
+                            Label::primary((), self.span.as_ref().unwrap().range())
+                                .with_message(format!("Register {}", register_name.clone())),
+                        ])
+                },
                 
                 _ => Diagnostic::error()
                         .with_message(self.msg()),
@@ -118,6 +126,8 @@ impl MimicError {
 
             let writer = StandardStream::stderr(ColorChoice::Always);
             term::emit(&mut writer.lock(), &Config{ ..Default::default()}, f, &e).expect("Unable to print error message");
+        } else {
+            println!("{}", self.msg());
         }
 
     }

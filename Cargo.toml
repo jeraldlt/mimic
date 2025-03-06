@@ -1,5 +1,5 @@
 [package]
-name = "mimic_emulator"
+name = "mimic"
 version = "0.1.0"
 edition = "2021"
 

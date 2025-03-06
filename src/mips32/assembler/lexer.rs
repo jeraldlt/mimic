@@ -23,6 +23,8 @@ pub enum Token {
     TypeDirective(Directive),
     Syscall,
 
+    Error(MimicError),
+
 }
 
 #[allow(dead_code)]
@@ -124,11 +126,11 @@ impl<'a> Iterator for Lexer<'a> {
                 Token::Whitespace => continue,
                 Token::Comment => continue,
                 Token::Newline => continue,
-                Token::Unknown(t) => MimicError {
+                Token::Unknown(t) => return Some((Token::Error(MimicError {
                     span: Some(span),
                     source: Some(self.source.clone()),
                     ty: MimicErrorType::UnknownToken{token: t},
-                }.emit(),
+                }), span)),
 
                 _ => return Some((tok, span)),
             }

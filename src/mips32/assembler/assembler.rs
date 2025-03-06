@@ -235,7 +235,7 @@ impl Instruction {
     fn get_register_arg(&self, index: usize) -> Result<u32, MimicError> {
         return if let Some(arg) = self.args.get(index) {
             if let Expr_::Register(s) = &arg.node {
-                register_name_to_number(s.to_owned(), &self.source).map(|v| v as u32)
+                register_name_to_number(s.to_owned(), arg.span, &self.source).map(|v| v as u32)
             } else {
                 Err(MimicError {
                     span: Some(arg.span),
@@ -245,9 +245,9 @@ impl Instruction {
             }
         } else {
             Err(MimicError {
-               span: Some(self.span),
+                span: Some(self.span),
                 source: Some(self.source.clone()),
-               ty: MimicErrorType::IncorrectArgument {}
+                ty: MimicErrorType::IncorrectArgument {}
             })
         }
     }
@@ -679,7 +679,7 @@ pub fn assemble_ast(ast: Vec<Stmt>, source: &SimpleFile<String, String>) -> Resu
 
         let inst = instruction.inst;
 
-        // println!("{:#010X}", (inst >> 0) as u8);
+        // println!("{:#010X?}", instruction);
         
         text_bytes.push((inst >> 0) as u8);
         text_bytes.push((inst >> 8) as u8);

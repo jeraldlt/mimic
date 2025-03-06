@@ -6,7 +6,7 @@ use lexer::{Lexer, Token};
 use parser::{parse, Stmt};
 use assembler::assemble_ast;
 
-use crate::errors::{MimicError, MimicErrorType};
+use crate::errors::{Span, MimicError, MimicErrorType};
 
 use codespan_reporting::files::SimpleFile;
 
@@ -41,41 +41,25 @@ fn assemble(file: SimpleFile<String, String>) -> Result<(Vec<u8>, Vec<u8>), Mimi
 
     let tokens = Lexer::new(file.source().as_str(), file.clone());
 
-    let mut valid = true;
     for (tok, _span) in tokens.clone() {
         match tok {
-            Token::Unknown(_) => valid = false,
+            Token::Error(e) => return Err(e),
             _ => {},
         }
 
         // println!("{:?}", tok);
     }
 
-    if !valid { 
-        // bail
-    }
 
     let ast: Vec<Stmt> = parse(tokens).unwrap();
 
     let (text_bytes, data_bytes) = assemble_ast(ast, &file)?;
 
-
-    // let (data_bytes, data_labels) = pack_data(&data);
-    // let (text_expanded, text_labels) = expand_pseudoinstructions(&text, &data_labels);
-    // let text_bytes = assemble_instructions(&text_expanded, &text_labels)?;
-
-    // for (i, byte) in (&data_bytes).iter().enumerate() {
-    //     println!("{}: {}", i, *byte as char);
-    // }
-
-    // let mut file = File::create("test2.data").unwrap();
-    // file.write_all(data_bytes.as_slice()).unwrap();
-
     Ok((text_bytes, data_bytes))
 }
 
 
-fn register_name_to_number(reg: String, source: &SimpleFile<String, String>) -> Result<usize, MimicError> {
+fn register_name_to_number(reg: String, span: Span, source: &SimpleFile<String, String>) -> Result<usize, MimicError> {
     let reg = reg.strip_prefix("$").unwrap_or(&reg);
 
     match reg.to_lowercase().as_str() {
@@ -113,9 +97,9 @@ fn register_name_to_number(reg: String, source: &SimpleFile<String, String>) -> 
         "31" | "ra" => Ok(31),
 
         _ => Err(MimicError {
-            span: None,
+            span: Some(span),
             source: Some(source.clone()),
-            ty: MimicErrorType::UnknownRegister{register_name: reg.to_owned()}
+            ty: MimicErrorType::UnknownRegister{register_name: format!("${}", reg)}
         }),
     }
 }
